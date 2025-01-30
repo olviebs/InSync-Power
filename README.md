@@ -6,3 +6,19 @@ InSync Power is an organization that creates and fortifies electrical grids of a
 - Test inverted sine wave ✅
   - Test sine & inverted sine simultaneously 🔳 
 -  MOSFET control 🔳
+
+## The Team
+**Professor Raziq Yaqub**
+- Project Advisor
+
+**Gustavo Moran-Diaz**
+
+**Nathan Taco Bravo**
+
+**Olivia Lieberman**
+
+**John Arbalaez**
+
+**Lawrence Bernal**
+
+**Harrison Teele**
