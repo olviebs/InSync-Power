@@ -48,6 +48,11 @@ const int MOSFET2 = 14;
 const int MOSFET3 = 26;
 const int MOSFET4 = 27;
 
+// Timing variables for non-blocking execution
+unsigned long previousTime = 0;
+const int triangleInterval = 125;  // 8kHz update interval (125µs)
+int triangleIndex = 0;
+
 // void writeSine(){  
 //     for (int i = 0; i < sineSize; i++){
 //     dacWrite(DAC_0, sine[i]);
@@ -63,8 +68,10 @@ const int MOSFET4 = 27;
 // }
 
 uint8_t readSine(){
-  uint8_t sineADC = analogRead(ADC_0);
-  return (sineADC, 0, 4095, 0, 255); // 8bit
+  analogRead(ADC_0);
+  delayMicroseconds(10);
+  int sineADC = analogRead(ADC_0);
+  return map(sineADC, 0, 4095, 0, 255); // 8bit
 }
 
 // void writeTriangle(){
@@ -75,16 +82,19 @@ uint8_t readSine(){
 // }
 
 //writes 128 bit 8kHz triangle wave
-void writeTriangle_128(){
-    for (int i = 0; i < triangleSize_128; i++){
-    dacWrite(DAC_0, triangleWave_128[i]);
-    compare(triangleWave_128[i]);
-    delayMicroseconds(125);
-  }
-}
+// void writeTriangle_128(){
+//     for (int i = 0; i < triangleSize_128; i++){
+//     dacWrite(DAC_0, triangleWave_128[i]);
+//     compare(triangleWave_128[i]);
+//     delayMicroseconds(125);
+//   }
+// }
 
-void compare(uint8_t triangle_val){
-  uint8_t sine_val = readSine();
+void compare(uint8_t sine_val, int8_t triangle_val){
+Serial.print("Sine: "); 
+Serial.print((uint8_t)sine_val);
+Serial.print("\tTriangle: "); 
+Serial.println((uint8_t)triangle_val);
 
   if(sine_val > triangle_val){
     digitalWrite(MOSFET1, HIGH);
@@ -99,17 +109,28 @@ void compare(uint8_t triangle_val){
   }
 }
 
+void updateTriangleWave() {
+    unsigned long currentTime = micros();
+    if (currentTime - previousTime >= triangleInterval) {
+        previousTime = currentTime;
+        uint8_t sine_val = readSine();
+        dacWrite(DAC_0, triangleWave_128[triangleIndex]);
+        compare(sine_val, triangleWave_128[triangleIndex]);
+        triangleIndex = (triangleIndex + 1) % triangleSize_128;
+    }
+}
+
 void setup() {
   Serial.begin(115200);
+  analogReadResolution(12);
   pinMode(MOSFET1, OUTPUT);
   pinMode(MOSFET2, OUTPUT);
   pinMode(MOSFET3, OUTPUT);
   pinMode(MOSFET4, OUTPUT);
-  pinMode(ADC_0, INPUT);
 }
 
 void loop() {
     //writeSine();
-    writeTriangle_128();
+    updateTriangleWave();
   }
 
