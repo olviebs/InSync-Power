@@ -26,9 +26,17 @@ ax1 = fig.add_subplot(1,1,1)
 
 ts = np.arange(T0, TE, (1/TIMERES))
 
+def waveConditioning (mag, freq, ang):
+    global PI
+    ys = np.sin((2*PI*freq*ts)+(ang*(PI/180))) # ys is a list with 1000 entries, # of entries per 2 periods can be edited with TIMERES constant
+    ys = ys * mag *(64/229173.491)
+    ys = ys + 65
+    ys = ys.astype(int)
+    return ys
+
 def animate(i):
     global T0, TE, FREQ, MAG, ROW, ANG
-    ys = MAG *(3.3/217449.8633)* np.sin((2*PI*FREQ*ts)+(ANG*(PI/180))) # ys is a list with 1000 entries, # of entries per 2 periods can be edited with TIMERES constant
+    ys = waveConditioning(MAG, FREQ, ANG)
     ax1.clear()
     ax1.plot(ts,ys)
     for i in range(0,int(TE*TIMERES)+1):
