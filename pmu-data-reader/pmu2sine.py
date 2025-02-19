@@ -29,8 +29,8 @@ ts = np.arange(T0, TE, (1/TIMERES))
 def waveConditioning (mag, freq, ang):
     global PI
     ys = np.sin((2*PI*freq*ts)+(ang*(PI/180))) # ys is a list with 1000 entries, # of entries per 2 periods can be edited with TIMERES constant
-    ys = ys * mag *(64/229173.491)
-    ys = ys + 65
+    ys = ys * mag *(128/229173.491)
+    ys = ys + 128
     ys = ys.astype(int)
     return ys
 
