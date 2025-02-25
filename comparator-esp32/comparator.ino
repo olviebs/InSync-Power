@@ -1,26 +1,18 @@
-//32-bit sine wave lookup table
-// Vpp = 2.2V, period = 16.8ms
-// const PROGMEM uint8_t sine[32] = {
-//   128, 153, 177, 199, 218, 234, 245, 253,
-//   255, 253, 245, 234, 218, 199, 177, 153,
-//   128, 103,  79,  57,  38,  22,  11,   3,
-//     0,   3,  11,  22,  38,  57,  79, 103
-// };
+#include <Wire.h>
+#include <Adafruit_ADS1X15.h>
+#include "config.h"
 
-// //32-bit inverted sine wave
-// const PROGMEM uint8_t invertedSine[32] = {
-//   128, 103,  79,  57,  38,  22,  11,   3,
-//     0,   3,  11,  22,  38,  57,  79, 103,
-//   128, 153, 177, 199, 218, 234, 245, 253,
-//   255, 253, 245, 234, 218, 199, 177, 153
-// };
+Adafruit_ADS1115 ads1115;	// Construct an ads1115 
 
-// const PROGMEM uint8_t triangleWave[32] = { 
-//     0, 16, 32, 48, 64, 80, 96, 112, 
-//     128, 144, 160, 176, 192, 208, 224, 240, 
-//     255, 240, 224, 208, 192, 176, 160, 144, 
-//     128, 112, 96, 80, 64, 48, 32, 16 
-// };
+const int DAC_0 = DAC0;
+
+// 1 & 3 on when sine[i] > 128, off when < 128
+// 2 & 4 on when sine[i] < 128, off when > 128
+const int MOSFET1 = 13;
+const int MOSFET2 = 14;
+//const int MOSFET3 = 26;
+//const int MOSFET4 = 27;
+
 
 const PROGMEM uint8_t triangleWave_128[128] = { 
     0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 
@@ -33,104 +25,73 @@ const PROGMEM uint8_t triangleWave_128[128] = {
     64, 60, 56, 52, 48, 44, 40, 36, 32, 28, 24, 20, 16, 12, 8, 4
 };
 
-// const int sineSize = sizeof(sine) / sizeof(sine[0]);
-// const int invertedSineSize = sizeof(invertedSine) / sizeof(invertedSine[0]);
-// const int triangleSize = sizeof(triangleWave) / sizeof(triangleWave[0]);
+const PROGMEM uint8_t invertedTriangleWave_128[128] = { 
+    255, 251, 247, 243, 239, 235, 231, 227, 223, 219, 215, 211, 207, 203, 199, 195, 
+    191, 187, 183, 179, 175, 171, 167, 163, 159, 155, 151, 147, 143, 139, 135, 131,
+    127, 123, 119, 115, 111, 107, 103, 99, 95, 91, 87, 83, 79, 75, 71, 67, 
+    63, 59, 55, 51, 47, 43, 39, 35, 31, 27, 23, 19, 15, 11, 7, 3, 
+    0, 3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59,
+    63, 67, 71, 75, 79, 83, 87, 91, 95, 99, 103, 107, 111, 115, 119, 123,
+    127, 131, 135, 139, 143, 147, 151, 155, 159, 163, 167, 171, 175, 179, 183, 187,
+    191, 195, 199, 203, 207, 211, 215, 219, 223, 227, 231, 235, 239, 243, 247, 251
+};
+
 const int triangleSize_128 = sizeof(triangleWave_128) / sizeof(triangleWave_128[0]);
-const int DAC_0 = 25;
-const int ADC_0 = 34;
-// const int DAC_1 = ;
-
-// 1 & 3 on when sine[i] > 128, off when < 128
-// 2 & 4 on when sine[i] < 128, off when > 128
-const int MOSFET1 = 13;
-const int MOSFET2 = 14;
-const int MOSFET3 = 26;
-const int MOSFET4 = 27;
-
-// Timing variables for non-blocking execution
 unsigned long previousTime = 0;
 const int triangleInterval = 125;  // 8kHz update interval (125µs)
 int triangleIndex = 0;
 
-// void writeSine(){  
-//     for (int i = 0; i < sineSize; i++){
-//     dacWrite(DAC_0, sine[i]);
-//     delayMicroseconds(521);
-//   }
-// }
-
-// void writeInvertedSine(){
-//     for (int i = 0; i < invertedSineSize; i++){
-//     dacWrite(DAC_0, invertedSine[i]);
-//     delayMicroseconds(521);
-//   }
-// }
-
-uint8_t readSine(){
-  analogRead(ADC_0);
-  delayMicroseconds(10);
-  int sineADC = analogRead(ADC_0);
-  return map(sineADC, 0, 4095, 0, 255); // 8bit
+//sine wave = 60Hz, 825mv offset, 1.65 Vpp
+uint16_t readSine(){
+  int16_t adc0 = ads1115.readADC_SingleEnded(0);
+  //uint8_t sineADC = adc0 >> 8; // convert 16bit to 8bit
+  uint8_t sineADC = map(adc0, 0, 32767, 0, 255);
+  return sineADC; // bias and offset 1.65V --> if not reading right, map sineADC 0,65535,0,255
 }
-
-// void writeTriangle(){
-//     for (int i = 0; i < triangleSize; i++){
-//     dacWrite(DAC_0, triangleWave[i]);
-//     delayMicroseconds(521);
-//   }
-// }
-
-//writes 128 bit 8kHz triangle wave
-// void writeTriangle_128(){
-//     for (int i = 0; i < triangleSize_128; i++){
-//     dacWrite(DAC_0, triangleWave_128[i]);
-//     compare(triangleWave_128[i]);
-//     delayMicroseconds(125);
-//   }
-// }
 
 void compare(uint8_t sine_val, int8_t triangle_val){
 Serial.print("Sine: "); 
-Serial.print((uint8_t)sine_val);
+Serial.print(sine_val);
 Serial.print("\tTriangle: "); 
 Serial.println((uint8_t)triangle_val);
 
   if(sine_val > triangle_val){
     digitalWrite(MOSFET1, HIGH);
-    digitalWrite(MOSFET3, HIGH);
+    //digitalWrite(MOSFET3, HIGH);
     digitalWrite(MOSFET2, LOW);
-    digitalWrite(MOSFET4, LOW);
+   //digitalWrite(MOSFET4, LOW);
   } else{
     digitalWrite(MOSFET1, LOW);
-    digitalWrite(MOSFET3, LOW);
+    //digitalWrite(MOSFET3, LOW);
     digitalWrite(MOSFET2, HIGH);
-    digitalWrite(MOSFET4, HIGH);
+   // digitalWrite(MOSFET4, HIGH);
   }
 }
 
-void updateTriangleWave() {
+void write_compare() {
     unsigned long currentTime = micros();
     if (currentTime - previousTime >= triangleInterval) {
         previousTime = currentTime;
         uint8_t sine_val = readSine();
-        dacWrite(DAC_0, triangleWave_128[triangleIndex]);
-        compare(sine_val, triangleWave_128[triangleIndex]);
+        analogWrite(DAC_0, invertedTriangleWave_128[triangleIndex]);
+        compare(sine_val, invertedTriangleWave_128[triangleIndex]);
         triangleIndex = (triangleIndex + 1) % triangleSize_128;
     }
 }
 
 void setup() {
   Serial.begin(115200);
-  analogReadResolution(12);
+  Wire.begin();
+  ads1115.begin();
+  ads1115.setGain(GAIN_TWO);
+  ads1115.setDataRate(RATE_ADS1115_860SPS);
   pinMode(MOSFET1, OUTPUT);
   pinMode(MOSFET2, OUTPUT);
-  pinMode(MOSFET3, OUTPUT);
-  pinMode(MOSFET4, OUTPUT);
+  //pinMode(MOSFET3, OUTPUT);
+  //pinMode(MOSFET4, OUTPUT);
 }
 
 void loop() {
-    //writeSine();
-    updateTriangleWave();
+    write_compare();
   }
 
