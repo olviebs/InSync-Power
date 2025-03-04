@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }];
 
     const layout = {
-        title: "Sample Scatter Plot",
+        title: "Reference Wave",
         xaxis: { title: "X-axis" },
         yaxis: { title: "Y-axis" }
     };
