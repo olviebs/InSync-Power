@@ -17,15 +17,21 @@ body {
 
 .graph-box {
   display: flex;
-  justify-content: center;
+  /*justify-content: center;*/
+  justify-content: flex-start;
   align-items: center;
   height: 100vh; /* Full viewport height */
+  /*width: 100vw;  Full viewport width */
   width: 100vw; /* Full viewport width */
+  padding-left: 20px; /* Adds space on the left */
+
 }
 
 .history-charts {
-  width: 80%; /* Adjust width as needed */
-  max-width: 800px; /* Prevent it from being too wide */
+  /*width: 80%;  Adjust width as needed 
+  max-width: 800px;  Prevent it from being too wide */
+  width: 60%; /* Adjust width as needed */
+  max-width: 600px; /* Prevent it from being too wide */
   background: #fff;
   padding: 20px;
   border-radius: 12px;
@@ -34,8 +40,12 @@ body {
 
 #myGraph {
   width: 100%; /* Ensures the graph container takes full width */
-  height: 500px; /* Adjust the height to fit nicely */
-}
+  /*height: 500px;  Adjust the height to fit nicely */
+  height: 400px; /* Adjust the height to fit nicely */
+
+} 
+
+
 .sidebar{
   position: fixed;
   height: 100%;

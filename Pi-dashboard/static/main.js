@@ -17,6 +17,11 @@ document.addEventListener("DOMContentLoaded", function () {
         xaxis: { title: "X-axis" },
         yaxis: { title: "Y-axis" }
     };
+    const layout2 = {
+        title: "Output Wave",
+        xaxis: { title: "X-axis" },
+        yaxis: { title: "Y-axis" }
+    };
 
     let graphDiv = document.getElementById("myGraph");
     if (graphDiv) {
@@ -25,4 +30,13 @@ document.addEventListener("DOMContentLoaded", function () {
     } else {
         console.error("Element #myGraph not found!");
     }
+
+    let graphDiv2 = document.getElementById("myGraph2");
+    if (graphDiv2) {
+        Plotly.newPlot(graphDiv2, data, layout2);
+        console.log("Plotly graph should be displayed.");
+    } else {
+        console.error("Element #myGraph not found!");
+    }
+
 });
