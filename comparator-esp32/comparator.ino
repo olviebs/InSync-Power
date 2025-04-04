@@ -41,7 +41,7 @@ const uint8_t invertedTriangleWave_128[128] = {
 1. Update carrier_period for lower period (7-10 us, currently at 125us)
 
 2. Uncomment TC0_Handler and commented lines in setup() to try register manipulation 
-    - Comment out compare() and write_compare()
+    - Comment out compare() and write_compare() and write_compare() in loop
 
 
 */
