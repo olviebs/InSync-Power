@@ -123,6 +123,6 @@ void setup() {
 }
 
 void loop() {
-
+    write_compare();
   }
 
