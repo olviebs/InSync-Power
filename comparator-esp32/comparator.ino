@@ -14,7 +14,7 @@ const int MOSFET2 = 14;
 //const int MOSFET4 = 27;
 
 
-const PROGMEM uint8_t triangleWave_128[128] = { 
+const uint8_t triangleWave_128[128] = { 
     0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 
     64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 120, 124,
     128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 168, 172, 176, 180, 184, 188,
@@ -25,7 +25,7 @@ const PROGMEM uint8_t triangleWave_128[128] = {
     64, 60, 56, 52, 48, 44, 40, 36, 32, 28, 24, 20, 16, 12, 8, 4
 };
 
-const PROGMEM uint8_t invertedTriangleWave_128[128] = { 
+const uint8_t invertedTriangleWave_128[128] = { 
     255, 251, 247, 243, 239, 235, 231, 227, 223, 219, 215, 211, 207, 203, 199, 195, 
     191, 187, 183, 179, 175, 171, 167, 163, 159, 155, 151, 147, 143, 139, 135, 131,
     127, 123, 119, 115, 111, 107, 103, 99, 95, 91, 87, 83, 79, 75, 71, 67, 
@@ -36,24 +36,38 @@ const PROGMEM uint8_t invertedTriangleWave_128[128] = {
     191, 195, 199, 203, 207, 211, 215, 219, 223, 227, 231, 235, 239, 243, 247, 251
 };
 
+/*
+
+1. Update carrier_period for lower period (7-10 us, currently at 125us)
+
+2. Uncomment TC0_Handler and commented lines in setup() to try register manipulation 
+    - Comment out compare() and write_compare() and write_compare() in loop
+
+
+*/
+
 const int triangleSize_128 = sizeof(triangleWave_128) / sizeof(triangleWave_128[0]);
 unsigned long previousTime = 0;
-const int triangleInterval = 125;  // 8kHz update interval (125µs)
+const int carrier_period = 125; 
 int triangleIndex = 0;
 
-//sine wave = 60Hz, 825mv offset, 1.65 Vpp
+/*
+
+func. generator - 60Hz Sine @ 825mv offset, 1.65 Vpp
+
+*/
+
 uint16_t readSine(){
   int16_t adc0 = ads1115.readADC_SingleEnded(0);
-  //uint8_t sineADC = adc0 >> 8; // convert 16bit to 8bit
   uint8_t sineADC = map(adc0, 0, 32767, 0, 255);
-  return sineADC; // bias and offset 1.65V --> if not reading right, map sineADC 0,65535,0,255
+  return sineADC;
 }
 
 void compare(uint8_t sine_val, int8_t triangle_val){
-Serial.print("Sine: "); 
-Serial.print(sine_val);
-Serial.print("\tTriangle: "); 
-Serial.println((uint8_t)triangle_val);
+  Serial.print("Sine: "); 
+  Serial.print(sine_val);
+  Serial.print("\tTriangle: "); 
+  Serial.println((uint8_t)triangle_val);
 
   if(sine_val > triangle_val){
     digitalWrite(MOSFET1, HIGH);
@@ -68,9 +82,18 @@ Serial.println((uint8_t)triangle_val);
   }
 }
 
+// void TC0_Handler(){
+//   TC0->TC_CHANNEL[0].TC_SR;
+//   uint8_t current_triangle = triangleWave_128[triangleIndex];
+//   uint8_t sine_val = readSine();
+//   analogWrite(DAC_0, current_triangle);
+//   compare(sine_val, current_triangle);
+//   triangleIndex = (triangleIndex + 1) % 128;
+// }
+
 void write_compare() {
     unsigned long currentTime = micros();
-    if (currentTime - previousTime >= triangleInterval) {
+    if (currentTime - previousTime >= carrier_period) {
         previousTime = currentTime;
         uint8_t sine_val = readSine();
         analogWrite(DAC_0, invertedTriangleWave_128[triangleIndex]);
@@ -85,10 +108,18 @@ void setup() {
   ads1115.begin();
   ads1115.setGain(GAIN_TWO);
   ads1115.setDataRate(RATE_ADS1115_860SPS);
+
+  // pmc_set_writeprotect(false);
+  // pmc_enable_periph_clk(ID_TC0);
+  // TC_Configure(TC0, 0, TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC | TC_CMR_TCCLKS_TIMER_CLOCK1);
+
+  // uint32_t stepRC = (42000000UL * carrier_period) / 1000000UL;
+
+  // TC0->TC_CHANNEL[0].TC_IER = TC_IER_CPCS;
+  // NVIC_EnableIRQ(TC0_IRQn);
+
   pinMode(MOSFET1, OUTPUT);
   pinMode(MOSFET2, OUTPUT);
-  //pinMode(MOSFET3, OUTPUT);
-  //pinMode(MOSFET4, OUTPUT);
 }
 
 void loop() {

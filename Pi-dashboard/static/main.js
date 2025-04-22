@@ -13,7 +13,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }];
 
     const layout = {
-        title: "Sample Scatter Plot",
+        title: "Reference Wave",
+        xaxis: { title: "X-axis" },
+        yaxis: { title: "Y-axis" }
+    };
+    const layout2 = {
+        title: "Output Wave",
         xaxis: { title: "X-axis" },
         yaxis: { title: "Y-axis" }
     };
@@ -25,4 +30,13 @@ document.addEventListener("DOMContentLoaded", function () {
     } else {
         console.error("Element #myGraph not found!");
     }
+
+    let graphDiv2 = document.getElementById("myGraph2");
+    if (graphDiv2) {
+        Plotly.newPlot(graphDiv2, data, layout2);
+        console.log("Plotly graph should be displayed.");
+    } else {
+        console.error("Element #myGraph not found!");
+    }
+
 });

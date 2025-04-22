@@ -1,12 +1,50 @@
 /* Googlefont Poppins CDN Link */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
 
+
+
+
 *{
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: 'Poppins', sans-serif;
 }
+
+body {
+  background-color: green;
+}
+
+.graph-box {
+  display: flex;
+  /*justify-content: center;*/
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Full viewport height */
+  /*width: 100vw;  Full viewport width */
+  width: 100vw; /* Full viewport width */
+}
+
+.history-charts {
+  /*width: 80%;  Adjust width as needed 
+  max-width: 800px;  Prevent it from being too wide */
+  display: flex; /* makes graphs align horizontally*/
+  width: 50%; /* Adjust width as needed */
+  max-width: 500px; /* Prevent it from being too wide */
+  background: #fff;
+  padding: 20px;
+  margin: 40px;
+  border-radius: 12px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+}
+
+#myGraph,#myGraph2 {
+  width: 100%; /* Ensures the graph container takes full width */
+  /*height: 500px;  Adjust the height to fit nicely */
+  height: 500px; /* Adjust the height to fit nicely */
+
+} 
+
 
 .sidebar{
   position: fixed;
